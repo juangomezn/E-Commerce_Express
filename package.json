@@ -1,0 +1,17 @@
+{
+  "name": "e-commerce-express",
+  "version": "1.0.0",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --quiet e-commerce-express.js"
+  },
+  "author": "JuanGomezN",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
