@@ -1,19 +1,52 @@
 import express from 'express';
+import mongoose from 'mongoose';
+import { body, validationResult } from "express-validator";
+import CreateProductDto from "../DTO's/product.dto.js";
 
-const productsRouter = express.Router();
+const productRouter = express.Router();
 
-productsRouter.get('/',( req, res ) => res.send('All products'));
+mongoose.connect(`${process.env.DB_URL}/${process.env.DB_NAME}`);
 
-productsRouter.get('/:id',
-    ( req, res ) => res.send(`Product With ID: ${req.params.id}`)
-);
+const productSchema = new mongoose.Schema({
+    code: String,
+    name: String,
+    active: Boolean
+});
 
-productsRouter.post('/:id',
-    ( req, res ) => res.send(`Creating a Product with ID ${req.params.id}`));
+const Product = mongoose.model('Product', productSchema);
 
-productsRouter.patch('/:id',
-    ( req, res ) => res.send(`Updating Product with ID${req.params.id}`));
+const validations = [
+    body('code').exists().withMessage('El código es obligatorio').isString().withMessage('El código debe ser una cadena de texto'),
+    body('name').exists().withMessage('El nombre es obligatorio').isString().withMessage('El nombre debe ser una cadena de texto'),
+    body('active').exists().withMessage('El campo "active" es obligatorio').isBoolean().withMessage('El campo "active" debe ser un valor booleano (true/false)')
+]
 
-productsRouter.delete('/:id',( req, res ) => res.send(`Deleting a Product with ID ${req.params.id}`));
+productRouter.post("/", validations, (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(402).json({ errors: errors.array() });
+    }
+    Product.insertOne({ ...new CreateProductDto(req.body), active: true })
+        .then((doc) => res.send(doc))
+        .catch((err) => res.send(err));
+});
 
-export default productsRouter;
+productRouter.get('/', (req, res) => {
+    Product.find({})
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
+
+productRouter.put('/:_id', (req, res) => {
+    Product.updateOne(req.params, { $set: req.body })
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
+
+productRouter.delete('/', (req, res) => {
+    Product.deleteOne({})
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
+
+export default productRouter;
