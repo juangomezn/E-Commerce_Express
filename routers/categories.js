@@ -1,19 +1,52 @@
 import express from 'express';
+import mongoose from 'mongoose';
+import { body, validationResult } from "express-validator";
+import CreateCategoryDto from '../DTO\'s/categories.dto';
 
 const categoriesRouter = express.Router();
 
-categoriesRouter.get('/',( req, res ) => res.send('All categories'));
+mongoose.connect(`${process.env.DB_URL}/${process.env.DB_NAME}`);
 
-categoriesRouter.get('/:id',
-    ( req, res ) => res.send(`Categorie With ID: ${req.params.id}`)
-);
+const categorySchema = new mongoose.Schema({
+    code: String,
+    name: String,
+    active: Boolean
+});
 
-categoriesRouter.post('/:id',
-    ( req, res ) => res.send(`Creating a Categorie with ID ${req.params.id}`));
+const Category = mongoose.model('category', categorySchema);
 
-categoriesRouter.patch('/:id',
-    ( req, res ) => res.send(`Updating Categorie with ID${req.params.id}`));
+const validations = [
+    body('code').exists().withMessage('El código es obligatorio').isString().withMessage('El código debe ser una cadena de texto'),
+    body('name').exists().withMessage('El nombre es obligatorio').isString().withMessage('El nombre debe ser una cadena de texto'),
+    body('active').exists().withMessage('El campo "active" es obligatorio').isBoolean().withMessage('El campo "active" debe ser un valor booleano (true/false)')
+]
 
-categoriesRouter.delete('/:id',( req, res ) => res.send(`Deleting a Categorie with ID ${req.params.id}`));
+categoriesRouter.post("/", validations, (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(402).json({ errors: errors.array() });
+    }
+    Category.insertOne({ ...new CreateCategoryDto(req.body), active: true })
+        .then((doc) => res.send(doc))
+        .catch((err) => res.send(err));
+});
+
+categoriesRouter.get('/', (req, res) => {
+    Category.find({})
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
+
+categoriesRouter.put('/:_id', (req, res) => {
+    Category.updateOne(req.params, { $set: req.body })
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
+
+categoriesRouter.delete('/', (req, res) => {
+    Category.deleteOne({})
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
 
 export default categoriesRouter;
