@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { body, validationResult } from "express-validator";
-import CreatePaymentMethodDto from "../DTO's/payment.method.dto";
+import CreatePaymentMethodDto from "../DTO's/payment.method.dto.js";
 
 const payment_methodsRouter = express.Router();
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { body, validationResult } from "express-validator";
-import CreateCategoryDto from '../DTO\'s/categories.dto';
+import CreateCategoryDto from '../DTO\'s/categories.dto.js';
 
 const categoriesRouter = express.Router();
 
@@ -26,7 +26,7 @@ categoriesRouter.post("/", validations, (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(402).json({ errors: errors.array() });
     }
-    Category.insertOne({ ...new CreateCategoryDto(req.body), active: true })
+    Category.insertOne({ ...(new CreateCategoryDto(req.body)), active: true })
         .then((doc) => res.send(doc))
         .catch((err) => res.send(err));
 });
