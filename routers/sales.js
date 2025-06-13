@@ -8,17 +8,79 @@ const salesRouter = express.Router();
 mongoose.connect(`${process.env.DB_URL}/${process.env.DB_NAME}`);
 
 const salesSchema = new mongoose.Schema({
-    code: String,
-    name: String,
-    active: Boolean
+    reference: String,
+    date: Date,
+    paymentMethod: {
+        type: Types.ObjectId,
+        ref: 'payment_methods',
+        required: true
+    },
+    client: {
+        type: Types.ObjectId,
+        ref: 'users',
+        required: true
+    },
+    seller: {
+        type: Types.ObjectId,
+        ref: 'users',
+        required: true
+    },
+    saledetails: [{
+        product: {
+            type: String,
+            required: true
+        },
+        quantity: {
+            type: String,
+            required: true
+        },
+        price: {
+            type: String,
+            required: true
+        }
+    }]
 });
 
 const Sales = mongoose.model('Sales', salesSchema);
 
 const validations = [
-    body('code').exists().withMessage('El código es obligatorio').isString().withMessage('El código debe ser una cadena de texto'),
-    body('name').exists().withMessage('El nombre es obligatorio').isString().withMessage('El nombre debe ser una cadena de texto'),
-    body('active').exists().withMessage('El campo "active" es obligatorio').isBoolean().withMessage('El campo "active" debe ser un valor booleano (true/false)')
+    body('reference')
+        .isString().withMessage('La referencia debe ser una cadena de texto')
+        .isLength({ min: 3, max: 30 }).withMessage('La referencia debe tener entre 3 y 30 caracteres'),
+    body('date')
+        .exists().withMessage('La fecha es obligatoria')
+        .toDate(),
+    body('payment_Method')
+        .exists()
+        .withMessage('El metodo de pago es obligatorio')
+        .isMongoId()
+        .withMessage('El metodo de pago debe ser un identificador válido'),
+    body('client')
+        .exists()
+        .withMessage('El cliente es obligatorio')
+        .isString()
+        .withMessage('El cliente debe ser una cadena de texto')
+        .isMongoId()
+        .withMessage('El cliente debe ser un identificador válido'),
+    body('seller')
+        .exists()
+        .withMessage('El vendedor es obligatorio')
+        .isString()
+        .withMessage('El vendedor debe ser una cadena de texto')
+        .isMongoId()
+        .withMessage('El vendedor debe ser un identificador válido'),
+    body("saledetails")
+        .isArray({ min: 3 })
+        .withMessage("Debe haber al menos un producto en la venta"),
+    body("saledetails.*.product")
+        .isString()
+        .withMessage("Debe ingresar un producto valido"),
+    body("saledetails.*.quantity")
+        .isInt({ min: 1 })
+        .withMessage("La cantidad debe ser un número entero mayor a 0"),
+    body("saledetails.*.price")
+        .isFloat({ min: 0 })
+        .withMessage("El precio debe ser un número positivo"),
 ]
 
 salesRouter.post("/", validations, (req, res) => {

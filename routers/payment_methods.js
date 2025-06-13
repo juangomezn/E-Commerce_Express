@@ -16,9 +16,21 @@ const payment_methodsSchema = new mongoose.Schema({
 const payment_methods = mongoose.model('payment_methods', payment_methodsSchema);
 
 const validations = [
-    body('code').exists().withMessage('El código es obligatorio').isString().withMessage('El código debe ser una cadena de texto'),
-    body('name').exists().withMessage('El nombre es obligatorio').isString().withMessage('El nombre debe ser una cadena de texto'),
-    body('active').exists().withMessage('El campo "active" es obligatorio').isBoolean().withMessage('El campo "active" debe ser un valor booleano (true/false)')
+    body('code')
+        .exists()
+        .withMessage('El código es obligatorio')
+        .isString()
+        .withMessage('El código debe ser una cadena de texto'),
+    body('name')
+        .exists()
+        .withMessage('El nombre es obligatorio')
+        .isString()
+        .withMessage('El nombre debe ser una cadena de texto'),
+    body('active')
+        .exists()
+        .withMessage('El campo "active" es obligatorio')
+        .isBoolean()
+        .withMessage('El campo "active" debe ser un valor booleano (true/false)')
 ]
 
 payment_methodsRouter.post("/", validations, (req, res) => {
@@ -37,13 +49,19 @@ payment_methodsRouter.get('/', (req, res) => {
         .catch(err => res.send('error'));
 });
 
+payment_methodsRouter.get('/:_id', (req, res) => {
+    payment_methods.find({})
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
+
 payment_methodsRouter.put('/:_id', (req, res) => {
     payment_methods.updateOne(req.params, { $set: req.body })
         .then((docs) => { res.send(docs) })
         .catch(err => res.send('error'));
 });
 
-payment_methodsRouter.delete('/', (req, res) => {
+payment_methodsRouter.delete('/:id', (req, res) => {
     payment_methods.deleteOne({})
         .then((docs) => { res.send(docs) })
         .catch(err => res.send('error'));

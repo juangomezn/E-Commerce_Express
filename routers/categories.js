@@ -16,9 +16,20 @@ const categorySchema = new mongoose.Schema({
 const Category = mongoose.model('category', categorySchema);
 
 const validations = [
-    body('code').exists().withMessage('El código es obligatorio').isString().withMessage('El código debe ser una cadena de texto'),
-    body('name').exists().withMessage('El nombre es obligatorio').isString().withMessage('El nombre debe ser una cadena de texto'),
-    body('active').exists().withMessage('El campo "active" es obligatorio').isBoolean().withMessage('El campo "active" debe ser un valor booleano (true/false)')
+    body('code')
+        .exists()
+        .withMessage('El código es obligatorio')
+        .isString()
+        .withMessage('El código debe ser una cadena de texto'),
+    body('name')
+        .exists()
+        .withMessage('El nombre es obligatorio')
+        .isString().withMessage('El nombre debe ser una cadena de texto'),
+    body('active')
+        .exists()
+        .withMessage('El campo "active" es obligatorio')
+        .isBoolean()
+        .withMessage('El campo "active" debe ser un valor booleano (true/false)')
 ]
 
 categoriesRouter.post("/", validations, (req, res) => {
@@ -37,13 +48,19 @@ categoriesRouter.get('/', (req, res) => {
         .catch(err => res.send('error'));
 });
 
+categoriesRouter.get('/:_id', (req, res) => {
+    Category.find({})
+        .then((docs) => { res.send(docs) })
+        .catch(err => res.send('error'));
+});
+
 categoriesRouter.put('/:_id', (req, res) => {
     Category.updateOne(req.params, { $set: req.body })
         .then((docs) => { res.send(docs) })
         .catch(err => res.send('error'));
 });
 
-categoriesRouter.delete('/', (req, res) => {
+categoriesRouter.delete('/:_id', (req, res) => {
     Category.deleteOne({})
         .then((docs) => { res.send(docs) })
         .catch(err => res.send('error'));
