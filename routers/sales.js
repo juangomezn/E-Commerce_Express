@@ -10,21 +10,9 @@ mongoose.connect(`${process.env.DB_URL}/${process.env.DB_NAME}`);
 const salesSchema = new mongoose.Schema({
     reference: String,
     date: Date,
-    paymentMethod: {
-        type: Types.ObjectId,
-        ref: 'payment_methods',
-        required: true
-    },
-    client: {
-        type: Types.ObjectId,
-        ref: 'users',
-        required: true
-    },
-    seller: {
-        type: Types.ObjectId,
-        ref: 'users',
-        required: true
-    },
+    paymentMethod: mongoose.ObjectId,
+    client: mongoose.ObjectId,
+    seller: mongoose.ObjectId,
     saledetails: [{
         product: {
             type: String,

@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { body, validationResult } from "express-validator";
 import CreateProductDto from "../DTO's/product.dto.js";
+import { ObjectId } from "mongodb";
 
 const productRouter = express.Router();
 
@@ -14,11 +15,7 @@ const productSchema = new mongoose.Schema({
     images: String,
     price: Number,
     stock: Number,
-    category: {
-        type: Types.ObjectId,
-        ref: 'Category',
-        required: true
-    },
+    category: mongoose.ObjectId,
     brand: String,
     condition: {
         type: String,
