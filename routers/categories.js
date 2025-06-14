@@ -1,69 +1,63 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import { body, validationResult } from "express-validator";
 import CreateCategoryDto from '../DTO\'s/categories.dto.js';
+import Category from '../models/Category.js';
 
 const categoriesRouter = express.Router();
 
-mongoose.connect(`${process.env.DB_URL}/${process.env.DB_NAME}`);
-
-const categorySchema = new mongoose.Schema({
-    code: String,
-    name: String,
-    active: Boolean
-});
-
-const Category = mongoose.model('category', categorySchema);
-
 const validations = [
-    body('code')
-        .exists()
-        .withMessage('El código es obligatorio')
-        .isString()
-        .withMessage('El código debe ser una cadena de texto'),
-    body('name')
-        .exists()
-        .withMessage('El nombre es obligatorio')
-        .isString().withMessage('El nombre debe ser una cadena de texto'),
-    body('active')
-        .exists()
-        .withMessage('El campo "active" es obligatorio')
-        .isBoolean()
-        .withMessage('El campo "active" debe ser un valor booleano (true/false)')
-]
+  body('code').exists().withMessage('El código es obligatorio').isString(),
+  body('name').exists().withMessage('El nombre es obligatorio').isString(),
+  body('active').exists().withMessage('El campo "active" es obligatorio').isBoolean()
+];
 
-categoriesRouter.post("/", validations, (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(402).json({ errors: errors.array() });
-    }
-    Category.insertOne({ ...(new CreateCategoryDto(req.body)), active: true })
-        .then((doc) => res.send(doc))
-        .catch((err) => res.send(err));
+categoriesRouter.post("/", validations, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const newCategory = new Category(new CreateCategoryDto(req.body));
+    const savedCategory = await newCategory.save();
+    res.status(201).json(savedCategory);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-categoriesRouter.get('/', (req, res) => {
-    Category.find({})
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
+categoriesRouter.get('/', async (req, res) => {
+  try {
+    const categories = await Category.find();
+    res.json(categories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-categoriesRouter.get('/:_id', (req, res) => {
-    Category.find({})
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
+categoriesRouter.get('/:_id', async (req, res) => {
+  try {
+    const category = await Category.findById(req.params._id);
+    res.json(category);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-categoriesRouter.put('/:_id', (req, res) => {
-    Category.updateOne(req.params, { $set: req.body })
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
+categoriesRouter.put('/:_id', async (req, res) => {
+  try {
+    const updated = await Category.updateOne({ _id: req.params._id }, { $set: req.body });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-categoriesRouter.delete('/:_id', (req, res) => {
-    Category.deleteOne({})
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
+categoriesRouter.delete('/:_id', async (req, res) => {
+  try {
+    const deleted = await Category.deleteOne({ _id: req.params._id });
+    res.json(deleted);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default categoriesRouter;

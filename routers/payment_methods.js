@@ -1,70 +1,42 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import { body, validationResult } from "express-validator";
 import CreatePaymentMethodDto from "../DTO's/payment.method.dto.js";
+import PaymentMethod from '../models/PaymentMethod.js';
 
-const payment_methodsRouter = express.Router();
-
-mongoose.connect(`${process.env.DB_URL}/${process.env.DB_NAME}`);
-
-const payment_methodsSchema = new mongoose.Schema({
-    code: String,
-    name: String,
-    active: Boolean
-});
-
-const payment_methods = mongoose.model('payment_methods', payment_methodsSchema);
+const router = express.Router();
 
 const validations = [
-    body('code')
-        .exists()
-        .withMessage('El código es obligatorio')
-        .isString()
-        .withMessage('El código debe ser una cadena de texto'),
-    body('name')
-        .exists()
-        .withMessage('El nombre es obligatorio')
-        .isString()
-        .withMessage('El nombre debe ser una cadena de texto'),
-    body('active')
-        .exists()
-        .withMessage('El campo "active" es obligatorio')
-        .isBoolean()
-        .withMessage('El campo "active" debe ser un valor booleano (true/false)')
-]
+  body('code').exists().isString(),
+  body('name').exists().isString(),
+  body('active').exists().isBoolean()
+];
 
-payment_methodsRouter.post("/", validations, (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(402).json({ errors: errors.array() });
-    }
-    payment_methods.insertOne({ ...new CreatePaymentMethodDto(req.body), active: true })
-        .then((doc) => res.send(doc))
-        .catch((err) => res.send(err));
+router.post("/", validations, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(402).json({ errors: errors.array() });
+
+  try {
+    const nuevo = new PaymentMethod({ ...new CreatePaymentMethodDto(req.body), active: true });
+    await nuevo.save();
+    res.status(201).json(nuevo);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-payment_methodsRouter.get('/', (req, res) => {
-    payment_methods.find({})
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
+router.get("/", async (_req, res) => {
+  const datos = await PaymentMethod.find();
+  res.json(datos);
 });
 
-payment_methodsRouter.get('/:_id', (req, res) => {
-    payment_methods.find({})
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
+router.put("/:_id", async (req, res) => {
+  await PaymentMethod.updateOne({ _id: req.params._id }, { $set: req.body });
+  res.sendStatus(204);
 });
 
-payment_methodsRouter.put('/:_id', (req, res) => {
-    payment_methods.updateOne(req.params, { $set: req.body })
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
+router.delete("/:_id", async (req, res) => {
+  await PaymentMethod.deleteOne({ _id: req.params._id });
+  res.sendStatus(204);
 });
 
-payment_methodsRouter.delete('/:id', (req, res) => {
-    payment_methods.deleteOne({})
-        .then((docs) => { res.send(docs) })
-        .catch(err => res.send('error'));
-});
-
-export default payment_methodsRouter;
+export default router;
